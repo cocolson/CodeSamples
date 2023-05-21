@@ -5,7 +5,7 @@
 // email:   coby.colson@digipen.edu
 // course:	GAM150 - Spring 2020
 //
-// Copyright © 2020 DigiPen, All rights reserved.
+// Copyright ï¿½ 2020 DigiPen, All rights reserved.
 //---------------------------------------------------------
 
 #include "stdafx.h"
@@ -33,9 +33,6 @@ static int scrollingTextIndex = 0;
 /* ------------------------------------------------------- Resource Management---------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------------------------------- */
 
-/** \brief Initializes elements of the user interface.
-*	Call this once in Main.c.
-*/
 void uiInit() {
 	glyphMesh[px8] = MeshCreateQuad(4.0f, 4.0f, 1.0f / 95, 1.0f);
 	glyphMesh[px16] = MeshCreateQuad(8.0f, 8.0f, 1.0f / 95, 1.0f);
@@ -61,9 +58,6 @@ void uiInit() {
 	scrollingTextBuffer = malloc(256);
 }
 
-/** \brief Frees elements of the user interface.
-	Call this once before Main.c exits.
-*/
 void uiFree() {
 	spriteFree(&glyphSprite);
 	for (int i = 0; i < FONT_HEAD; i++) {
@@ -82,14 +76,6 @@ void uiFree() {
 /* -------------------------------------------------------------Buttons----------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------------------------------- */
 
-/** \brief Creates a button set which can store interactable buttons.
-* \param orientation orientation the orientation of the icon set (HORIZONTAL or VERTICAL)
-* \param buttonWidth the pixel width of the buttons
-* \param buttonHeight the pixel height of the buttons
-* \param verticalPadding the pixel padding between buttons
-* \param inactiveAlpha the alpha of buttons while inactive (0.0f - 1.0f)
-* \return a pointer to the ButtonSet
-*/
 ButtonSetPtr buttonSetCreate(UIOrientation orientation, float buttonWidth, float buttonHeight, float padding, float inactiveAlpha) {
 	ButtonSetPtr buttonSet_p = calloc(1, sizeof(ButtonSet));
 	if (buttonSet_p != NULL) {
@@ -107,11 +93,6 @@ ButtonSetPtr buttonSetCreate(UIOrientation orientation, float buttonWidth, float
 	return NULL;
 }
 
-/** \brief Creates a button which resides inside of a button set.
-* \param buttonSet_p a pointer to the corresponding button set
-* \param resourcePath the path to the image to use for the button (NOTE: may become deprecated when UI no longer uses images)
-* \param action the void returning function defined in uibuttondefines.c
-*/
 void buttonCreate(ButtonSetPtr buttonSet_p, const char* resourcePath, Action action) {
 	if (buttonSet_p == NULL) {
 		AE_ASSERT_MESG(buttonSet_p, "Attempted to create a button without a valid button set.");
@@ -133,48 +114,44 @@ void buttonCreate(ButtonSetPtr buttonSet_p, const char* resourcePath, Action act
 	}
 }
 
-/** \brief Updates a button set's active button.
-*	Call this every frame in your update function if you want to be able to change the active button.
-* \param buttonSet_p a pointer to the corresponding button set
-*/
 void buttonsUpdate(ButtonSetPtr buttonSet_p) {
 	ButtonPtr buttons = buttonSet_p->buttons;
+	// Update active button based on input events for HORIZONTAL orientation
 	if (buttonSet_p->orientation == HORIZONTAL) {
 		if (CuInputCheckReleased(BTN_L_RIGHT) || CuInputCheckReleased(BTN_R_RIGHT)) {
 			if (buttonSet_p->activeButton < buttonSet_p->buttonCount - 1) {
 				buttonSet_p->activeButton++;
-			}
-			else {
+			} else {
 				buttonSet_p->activeButton = 0;
 			}
-		}
+		} 
 		else if (CuInputCheckReleased(BTN_L_LEFT) || CuInputCheckReleased(BTN_R_LEFT)) {
 			if (buttonSet_p->activeButton > 0) {
 				buttonSet_p->activeButton--;
-			}
-			else {
+			} else {
 				buttonSet_p->activeButton = buttonSet_p->buttonCount - 1;
 			}
 		}
 	}
+	// Update active button based on input events for VERTICAL orientation
 	else if (buttonSet_p->orientation == VERTICAL) {
 		if (CuInputCheckReleased(BTN_L_UP) || CuInputCheckReleased(BTN_R_UP)) {
 			if (buttonSet_p->activeButton > 0) {
 				buttonSet_p->activeButton--;
-			}
-			else {
+			} else {
 				buttonSet_p->activeButton = buttonSet_p->buttonCount - 1;
 			}
-		}
+		} 
 		else if (CuInputCheckReleased(BTN_L_DOWN) || CuInputCheckReleased(BTN_R_DOWN)) {
 			if (buttonSet_p->activeButton < buttonSet_p->buttonCount - 1) {
 				buttonSet_p->activeButton++;
-			}
-			else {
+			} else {
 				buttonSet_p->activeButton = 0;
 			}
 		}
 	}
+	
+	// Execute action associated with the active button if start or select button is released
 	if (CuInputCheckReleased(BTN_START) || CuInputCheckReleased(BTN_SELECT)) {
 		if ((buttons + buttonSet_p->activeButton)->action != NULL) {
 			(buttons + buttonSet_p->activeButton)->action();
@@ -182,23 +159,22 @@ void buttonsUpdate(ButtonSetPtr buttonSet_p) {
 	}
 }
 
-/** \brief Draws a button set.
-*	Call this every frame in your update function if you want to draw the buttons.
-* \param buttonSet_p a pointer to the corresponding button set
-* \param x the x coordinate of the button set
-* \param y the y coordinate of the button set
-*/
 void buttonsDraw(ButtonSetPtr buttonSet_p, float x, float y) {
 	ButtonPtr buttons = buttonSet_p->buttons;
 	float width = buttonSet_p->buttonWidth;
 	float height = buttonSet_p->buttonHeight;
 	float padding = buttonSet_p->padding;
+	
+	// Check if there are buttons to draw
 	if (buttons != NULL) {
 		for (int i = 0; i < buttonSet_p->buttonCount; i++) {
 			float alpha = (buttonSet_p->activeButton == i ? 1.0f : buttonSet_p->inactiveAlpha);
+			
+			// Draw buttons in HORIZONTAL orientation
 			if (buttonSet_p->orientation == HORIZONTAL) {
 				imageCorner((buttons + i)->tex_p, x + (padding * i), y, width, height, alpha, 0.0f);
 			}
+			// Draw buttons in VERTICAL orientation
 			else if (buttonSet_p->orientation == VERTICAL) {
 				imageCorner((buttons + i)->tex_p, x, y + (padding * i), width, height, alpha, 0.0f);
 			}
@@ -206,9 +182,6 @@ void buttonsDraw(ButtonSetPtr buttonSet_p, float x, float y) {
 	}
 }
 
-/** \brief Unloads memory allocated by button sets.
-* \param buttonSet_p a pointer to the corresponding button set
-*/
 void buttonsUnload(ButtonSetPtr buttonSet_p) {
 	if (buttonSet_p != NULL) {
 		if (buttonSet_p->buttons != NULL) {
@@ -222,12 +195,6 @@ void buttonsUnload(ButtonSetPtr buttonSet_p) {
 	}
 }
 
-/** \brief Returns the active button in a button set.
-*	You do not need to call this to monitor button presses.
-*	However, it might be useful for displaying/hiding certain effects.
-* \param buttonSet_p a pointer to the corresponding button set
-* \return the active button
-*/
 int buttonsGetActiveButton(ButtonSetPtr buttonSet_p) {
 	return buttonSet_p->activeButton;
 }
@@ -236,54 +203,52 @@ int buttonsGetActiveButton(ButtonSetPtr buttonSet_p) {
 /* ---------------------------------------------------------Progress Bars--------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------------------------------- */
 
-/** \brief Recalculates the mesh used by the fill portion of a
-*	progress bar if the display value has been changed.
-* \param progBar_p a pointer to the corresponding progress bar
-*/
 AEGfxVertexList* progressBarGetMesh(ProgressBarPtr progBar_p) {
-	float fillPercent = (float) * (progBar_p->display) / (float)progBar_p->max;
+	// Calculate the fill percentage based on the current display value and maximum value
+	float fillPercent = (float) *(progBar_p->display) / (float) progBar_p->max;
 	float w = progBar_p->barWidth;
 	float h = progBar_p->barHeight;
 	u32 fill = progBar_p->fillColor;
 	AEGfxVertexList* mesh_p;
+
+	// Start creating a new mesh
 	AEGfxMeshStart();
+
+	// Generate triangles based on the orientation of the progress bar
 	if (progBar_p->orientation == HORIZONTAL) {
+		// Add the left triangle for the filled portion
 		AEGfxTriAdd(0.0f, h, fill, 0.0f, 0.0f,
-			w * fillPercent, h, fill, 0.0f, 0.0f,
-			0.0f, 0.0f, fill, 0.0f, 0.0f);
+					w * fillPercent, h, fill, 0.0f, 0.0f,
+					0.0f, 0.0f, fill, 0.0f, 0.0f);
+
+		// Add the right triangle for the unfilled portion
 		AEGfxTriAdd(w * fillPercent, h, fill, 0.0f, 0.0f,
-			w * fillPercent, 0.0f, fill, 0.0f, 0.0f,
-			0.0f, 0.0f, fill, 0.0f, 0.0f);
+					w * fillPercent, 0.0f, fill, 0.0f, 0.0f,
+					0.0f, 0.0f, fill, 0.0f, 0.0f);
 	}
 	else if (progBar_p->orientation == VERTICAL) {
+		// Add the top triangle for the filled portion
 		AEGfxTriAdd(0.0f, h, fill, 0.0f, 0.0f,
-			w, h, fill, 0.0f, 0.0f,
-			0.0f, (1.0f - fillPercent) * h, fill, 0.0f, 0.0f);
+					w, h, fill, 0.0f, 0.0f,
+					0.0f, (1.0f - fillPercent) * h, fill, 0.0f, 0.0f);
+
+		// Add the bottom triangle for the unfilled portion
 		AEGfxTriAdd(w, h, fill, 0.0f, 0.0f,
-			w, (1.0f - fillPercent) * h, fill, 0.0f, 0.0f,
-			0.0f, (1.0f - fillPercent) * h, fill, 0.0f, 0.0f);
+					w, (1.0f - fillPercent) * h, fill, 0.0f, 0.0f,
+					0.0f, (1.0f - fillPercent) * h, fill, 0.0f, 0.0f);
 	}
+
+	// Finalize the mesh creation
 	mesh_p = AEGfxMeshEnd();
+
 	return mesh_p;
 }
 
-/** \brief Creates a progress bar which can display the value of a desired integer.
-* \param orientation orientation the orientation of the progress bar (HORIZONTAL or VERTICAL)
-* \param interactable set to INTERACT if the player can alter the display value at runtime.
-	otherwise, set to NO_INTERACT.
-* \param fillColor the fill color of the progress bar
-* \param emptyColor the empty color of the progress bar
-* \param barWidth the pixel width of the entire progress bar
-* \param barHeight the pixel height of the entire progress bar
-* \param min the minimum value held by the display value. the display value will be clamped.
-* \param max the maximum value held by the display value. the display value will be clamped.
-* \param display a pointer to the integer to represent
-* \return a pointer to the ProgressBar
-*/
 ProgressBarPtr progressBarCreate(UIOrientation orientation, UIInteract interactable, u32 fillColor, u32 emptyColor,
 	float barWidth, float barHeight, int min, int max, int* display) {
 	ProgressBarPtr progBar_p = calloc(1, sizeof(ProgressBar));
 	if (progBar_p != NULL) {
+		// Initialize the progress bar properties
 		progBar_p->fillColor = fillColor;
 		progBar_p->emptyColor = emptyColor;
 		progBar_p->barWidth = barWidth;
@@ -293,9 +258,14 @@ ProgressBarPtr progressBarCreate(UIOrientation orientation, UIInteract interacta
 		progBar_p->display = display;
 		progBar_p->orientation = orientation;
 		progBar_p->interactable = interactable;
+
+		// Generate the vertex list for the filled portion of the progress bar
 		progBar_p->fill_verts_p = progressBarGetMesh(progBar_p);
+
 		AEGfxVertexList* empty_verts_p;
 		AEGfxMeshStart();
+
+		// Generate triangles for the empty portion of the progress bar based on the orientation
 		if (orientation == HORIZONTAL) {
 			AEGfxTriAdd(0.0f, barHeight, emptyColor, 0.0f, 0.0f,
 				barWidth, barHeight, emptyColor, 0.0f, 0.0f,
@@ -312,8 +282,11 @@ ProgressBarPtr progressBarCreate(UIOrientation orientation, UIInteract interacta
 				barWidth, 0.0f, emptyColor, 0.0f, 0.0f,
 				0.0f, 0.0f, emptyColor, 0.0f, 0.0f);
 		}
+
+		// Finalize the empty vertex list
 		empty_verts_p = AEGfxMeshEnd();
 		progBar_p->empty_verts_p = empty_verts_p;
+
 		return progBar_p;
 	}
 	else {
@@ -322,60 +295,59 @@ ProgressBarPtr progressBarCreate(UIOrientation orientation, UIInteract interacta
 	}
 }
 
-/** \brief Updates a progress bar by monitoring input and recalculating meshes.
-*	Call this every frame in your update function if you want to update the progress bar.
-* \param progBar_p a pointer to the corresponding progress bar
-*/
 void progressBarUpdate(ProgressBarPtr progBar_p) {
+	// Update the display value, clamping it between min and max
 	*(progBar_p->display) = clampInt(*(progBar_p->display), progBar_p->min, progBar_p->max);
+
+	// Check if the display value has changed since the last frame
 	if (progBar_p->displayTemp != *(progBar_p->display)) {
-		// Value has changed outside this loop, manually update
-		progBar_p->displayChange = 1;
+		progBar_p->displayChange = 1; // Set the display change flag
 	}
+
+	// If the display has changed, update the fill vertices of the progress bar mesh
 	if (progBar_p->displayChange) {
-		// Value has changed since last frame - update mesh
 		progBar_p->fill_verts_p = progressBarGetMesh(progBar_p);
-		progBar_p->displayChange = 0;
+		progBar_p->displayChange = 0; // Reset the display change flag
 	}
+
+	// Check if the progress bar is interactable
 	if (progBar_p->interactable == INTERACT) {
+		// Handle interaction based on the orientation of the progress bar
 		if (progBar_p->orientation == HORIZONTAL) {
+			// Handle left and right input for horizontal progress bar
 			if (CuInputCheckCurr(BTN_L_LEFT) || CuInputCheckCurr(BTN_R_LEFT)) {
 				if (*(progBar_p->display) > progBar_p->min) {
-					--* (progBar_p->display);
-					progBar_p->displayChange = 1;
+					--*(progBar_p->display); // Decrease the display value
+					progBar_p->displayChange = 1; // Set the display change flag
 				}
-			}
+			} 
 			else if (CuInputCheckCurr(BTN_L_RIGHT) || CuInputCheckCurr(BTN_R_RIGHT)) {
 				if (*(progBar_p->display) < progBar_p->max) {
-					++* (progBar_p->display);
-					progBar_p->displayChange = 1;
+					++*(progBar_p->display); // Increase the display value
+					progBar_p->displayChange = 1; // Set the display change flag
 				}
 			}
 		}
 		else if (progBar_p->orientation == VERTICAL) {
+			// Handle up and down input for vertical progress bar
 			if (CuInputCheckCurr(BTN_L_UP) || CuInputCheckCurr(BTN_R_UP)) {
 				if (*(progBar_p->display) < progBar_p->max) {
-					++* (progBar_p->display);
-					progBar_p->displayChange = 1;
+					++*(progBar_p->display); // Increase the display value
+					progBar_p->displayChange = 1; // Set the display change flag
 				}
-			}
+			} 
 			else if (CuInputCheckCurr(BTN_L_DOWN) || CuInputCheckCurr(BTN_R_DOWN)) {
 				if (*(progBar_p->display) > progBar_p->min) {
-					--* (progBar_p->display);
-					progBar_p->displayChange = 1;
+					--*(progBar_p->display); // Decrease the display value
+					progBar_p->displayChange = 1; // Set the display change flag
 				}
 			}
 		}
 	}
-	progBar_p->displayTemp = *(progBar_p->display);
+
+	progBar_p->displayTemp = *(progBar_p->display); // Update the temporary display value
 }
 
-/** \brief Draws a progress bar.
-*	Call this every frame in your update function if you want to draw the progress bar.
-* \param progBar_p a pointer to the corresponding progress bar
-* \param x the x coordinate of the progress bar
-* \param y the y coordinate of the progress bar
-*/
 void progressBarDraw(ProgressBarPtr progBar_p, float x, float y) {
 	float camX, camY;
 	AEGfxGetCamPosition(&camX, &camY);
@@ -387,9 +359,6 @@ void progressBarDraw(ProgressBarPtr progBar_p, float x, float y) {
 	AEGfxMeshDraw(progBar_p->fill_verts_p, AE_GFX_MDM_TRIANGLES);
 }
 
-/** \brief Unloads memory allocated by progress bars.
-* \param progBar_p a pointer to the corresponding progress bar
-*/
 void progressBarUnload(ProgressBarPtr progBar_p) {
 	AEGfxMeshFree(progBar_p->fill_verts_p);
 	AEGfxMeshFree(progBar_p->empty_verts_p);
@@ -400,13 +369,6 @@ void progressBarUnload(ProgressBarPtr progBar_p) {
 /* ------------------------------------------------Icon Sets ( WIP: Do not use yet )---------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------------------------------- */
 
-/** \brief Creates an icon set which can display multiple images with associated values.
-* \param orientation the orientation of the icon set (HORIZONTAL or VERTICAL)
-* \param iconWidth the pixel width of the icons
-* \param iconHeight the pixel height of the icons
-* \param padding the pixel padding between icons
-* \return a pointer to the new icon set
-*/
 IconSetPtr iconSetCreate(UIOrientation orientation, float iconWidth, float iconHeight, float padding) {
 	IconSetPtr iconSet_p = calloc(1, sizeof(IconSet));
 	if (iconSet_p != NULL) {
@@ -422,11 +384,6 @@ IconSetPtr iconSetCreate(UIOrientation orientation, float iconWidth, float iconH
 	return NULL;
 }
 
-/** \brief Creates an icon associated with an icon set.
-* \param iconSet_p a pointer to the corresponding icon set
-* \param resourcePath the path to the image to use for the icon (NOTE: may become deprecated when UI no longer uses images)
-* \param a pointer to the value displayed adjacent to the icon (NOTE: this feature will not work until text is working)
-*/
 void iconCreate(IconSetPtr iconSet_p, const char* resourcePath, int* display) {
 	if (iconSet_p == NULL) {
 		AE_ASSERT_MESG(iconSet_p, "Attempted to create an icon without a valid icon set.");
@@ -448,11 +405,6 @@ void iconCreate(IconSetPtr iconSet_p, const char* resourcePath, int* display) {
 	}
 }
 
-/** \brief Draws an icon set. Call this every frame in your update function.
-* \param iconSet_p a pointer to the corresponding icon set
-* \param x the x coordinate of the icon set
-* \param y the y coordinate of the icon set
-*/
 void iconsDraw(IconSetPtr iconSet_p, float x, float y) {
 	IconPtr icons = iconSet_p->icons;
 	float width = iconSet_p->iconWidth;
@@ -471,9 +423,6 @@ void iconsDraw(IconSetPtr iconSet_p, float x, float y) {
 	}
 }
 
-/** \brief Unloads memory allocated by an icon set.
-* \param iconSet_p a pointer to the corresponding icon set
-*/
 void iconsUnload(IconSetPtr iconSet_p) {
 	if (iconSet_p != NULL) {
 		if (iconSet_p->icons != NULL) {
@@ -491,90 +440,87 @@ void iconsUnload(IconSetPtr iconSet_p) {
 /* -------------------------------------------------------------Text-------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------------------------------- */
 
-
-/** \brief Draws text to the screen.
-* \param text the text to draw to the screen
-* \param font the font to use (see ui.h for all fonts)
-* \param size the pixel size of the font (currently supports
-	px8, px16, px32, px64)
-* \param x the x position of the text
-* \param y the y position of the text
-*/
 void text(const char* text, Font font, FontSize size, float x, float y, float alpha) {
-	if (!text)
+	if (!text) {
+		// If the text is NULL, there is nothing to render, so we return from the function.
 		return;
+	}
+
 	float xOffset = 0;
 	float yOffset = 0;
+
+	// Set the mesh, spritesheet, and alpha values for the glyph sprite.
 	spriteSetMesh(glyphSprite, glyphMesh[size]);
 	spriteSetSpritesheet(glyphSprite, glyphSheet[font]);
 	spriteSetAlpha(glyphSprite, alpha);
+
+	// Loop through each character in the text string.
 	for (int i = 0; *text != '\0'; i++, text++) {
 		if (*text >= ' ' && *text <= 'z') {
+			// If the character is within the valid range of printable characters, render it.
 			int frameIndex = *text - ' ';
+
+			// Set the frame index of the glyph sprite and draw it at the specified position.
 			spriteSetFrame(glyphSprite, frameIndex);
 			spriteDraw(glyphSprite, x + xOffset, y + yOffset);
+
+			// Increment the xOffset by the size of the character to position the next character.
 			xOffset += pxSize[size];
 		}
 		else if (*text == '\n') {
+			// If a newline character is encountered, move to the next line.
 			xOffset = 0;
 			yOffset += pxSize[size];
 		}
 	}
 }
 
-/** \brief Draws centered text to the screen.
-* \param text the text to draw to the screen
-* \param font the font to use (see ui.h for all fonts)
-* \param size the pixel size of the font (currently supports
-	px8, px16, px32, px48, px64)
-* \param x the x position of the text
-* \param y the y position of the text
-*/
+
 void centerText(const char* myText, Font font, FontSize size, float x, float y, float alpha) {
 	text(myText, font, size,
 		x - pxSize[size] * ((strlen(myText) / 2.0f) / (newlineCount(myText) + 1)) + (pxSize[size] / 2.0f), y, alpha);
 }
 
-/** \brief Draws wavy text to the screen.
-* \param text the text to draw to the screen
-* \param font the font to use (see ui.h for all fonts)
-* \param size the pixel size of the font (currently supports
-	px8, px16, px32, px48, px64)
-* \param x the x position of the text
-* \param y the y position of the text
-* \param waveHeight the height of the wave
-*/
 void waveText(const char* text, Font font, FontSize size, float x, float y, float waveHeight, float waveSpeed, float alpha) {
-	if (!text)
+	if (!text) {
+		// If the text is NULL, there is nothing to render, so we return from the function.
 		return;
+	}
+
 	float xOffset = 0;
 	float yOffset = 0;
+
+	// Set the mesh, spritesheet, and alpha values for the glyph sprite.
 	spriteSetMesh(glyphSprite, glyphMesh[size]);
 	spriteSetSpritesheet(glyphSprite, glyphSheet[font]);
 	spriteSetAlpha(glyphSprite, alpha);
+
+	// Loop through each character in the text string.
 	for (int i = 0; *text != '\0'; i++, text++) {
 		if (*text >= ' ' && *text <= 'z') {
+			// If the character is within the valid range of printable characters, render it.
 			int frameIndex = *text - ' ';
+
+			// Set the frame index of the glyph sprite.
 			spriteSetFrame(glyphSprite, frameIndex);
-			spriteDraw(glyphSprite, x + xOffset, y + yOffset + waveHeight * sinf(waveSpeed * getGameStateTime() + i));
+
+			// Calculate the vertical displacement using a sine wave with the given waveHeight and waveSpeed.
+			float yOffsetWave = waveHeight * sinf(waveSpeed * getGameStateTime() + i);
+
+			// Draw the glyph sprite at the specified position with the vertical displacement.
+			spriteDraw(glyphSprite, x + xOffset, y + yOffset + yOffsetWave);
+
+			// Increment the xOffset by the size of the character to position the next character.
 			xOffset += pxSize[size];
 		}
 		else if (*text == '\n') {
+			// If a newline character is encountered, move to the next line.
 			xOffset = 0;
 			yOffset += pxSize[size];
 		}
 	}
 }
 
-/** \brief Draws centered wavy text to the screen.
-* \param text the text to draw to the screen
-* \param font the font to use (see ui.h for all fonts)
-* \param size the pixel size of the font (currently supports
-	px8, px16, px32, px48, px64)
-* \param x the x position of the text
-* \param y the y position of the text
-* \param waveHeight the height of the wave
-*/
 void centerWaveText(const char* text, Font font, FontSize size, float x, float y, float waveHeight, float waveSpeed, float alpha) {
 	waveText(text, font, size,
 		x - pxSize[size] * ((strlen(text) / 2) / (newlineCount(text) + 1)) + (pxSize[size] / 2), y, waveHeight, waveSpeed, alpha);
@@ -584,12 +530,6 @@ void centerWaveText(const char* text, Font font, FontSize size, float x, float y
 /* -------------------------------------------------------------Gfx--------------------------------------------------------------- */
 /* ------------------------------------------------------------------------------------------------------------------------------- */
 
-/** \brief Draws a stroked line.
-* \param verts The line to draw. I haven't tested this with other types of meshes.
-* \param x the x origin of the line
-* \param y the y origin of the line
-* \param weight the weight of the stroke
-*/
 void strokeLine(AEGfxVertexList* verts, float x, float y, int weight, float alpha) {
 	AEGfxSetBlendMode(AE_GFX_BM_BLEND);
 	AEGfxSetRenderMode(AE_GFX_RM_COLOR);
