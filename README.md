@@ -1,7 +1,6 @@
 <h1 align="center">Welcome to my GitHub profile! 👋🤖</h1>
 <p>
     My name is Coby!<br>
-    I am just one pixel on a vast canvas...but every masterpiece starts with one keystroke.<br>
     I want to improve lives by making data-driven decisions that make the tools we use more human-friendly.<br>
 </p>
 <p>
