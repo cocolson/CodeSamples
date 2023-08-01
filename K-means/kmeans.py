@@ -9,7 +9,14 @@
 
 import numpy as np
 from PIL import Image
+import tkinter as tk
+from tkinter import filedialog
+from PIL import Image, ImageTk
 import random
+import os
+
+original_tk = None
+new_tk = None
 
 def generate_centroids(image, num_centroids):
     im = Image.open(image)
@@ -26,7 +33,7 @@ def generate_centroids(image, num_centroids):
     im.close()
     return centroids
 
-def k_means_auxiliary(image, clusters, centroids, recomputation_times):
+def k_means(image, clusters, centroids, recomputation_times):
     im = Image.open(image)
     width, height = im.size
     points = centroids[:clusters]
@@ -71,11 +78,90 @@ def k_means_auxiliary(image, clusters, centroids, recomputation_times):
         points = new_points
         new_points = [(0, 0, 0)] * len(points)
     
-    im.save(image[:-4] + str(clusters)
+    im.save(image[:-4] + str(clusters) + ".jpg")
 
-def k_means(image, min_clusters, max_clusters, recomputation_times):
-    centroids = generate_centroids(image, max_clusters)
-    for i in range(min_clusters, max_clusters):
-        k_means_auxiliary(image, i, centroids, recomputation_times)
+def k_means_aux(image, clusters, recomputation_times):
+    centroids = generate_centroids(image, clusters)
+    k_means(image, clusters, centroids, recomputation_times)
 
-k_means('YOURIMAGENAME.jpg', 3, 11, 3)
+def apply_k_means():
+    if original_image:
+        num_clusters = int(num_clusters_var.get())
+        if num_clusters >= 2:
+            image_path = "temp_image.jpg"
+            original_image.save(image_path)  # Save the original image to a temporary path
+
+            # Apply k_means_aux with the given number of clusters and recomputation times
+            k_means_aux(image_path, num_clusters, 3)
+
+            # Open the quantized image from the temporary path
+            new_image = Image.open(image_path[:-4] + str(num_clusters) + ".jpg")
+            new_image.thumbnail((400, 400))
+            new_images[num_clusters] = ImageTk.PhotoImage(new_image)
+            update_image_labels()
+
+            # Remove the temporary image file
+            os.remove(image_path)
+            os.remove(image_path[:-4] + str(num_clusters) + ".jpg")
+
+def load_image():
+    file_path = filedialog.askopenfilename()
+    if file_path:
+        global original_image, new_image
+        original_image = Image.open(file_path)
+        new_image = original_image.copy()
+
+        max_w = 400
+        max_h = 400
+        original_image.thumbnail((max_w, max_h))
+        new_image.thumbnail((max_w, max_h))
+        update_image_labels()
+
+def update_image_labels():
+    global original_tk, new_tk
+    original_tk = ImageTk.PhotoImage(original_image)
+    num_clusters = int(num_clusters_var.get())
+    new_tk = new_images.get(num_clusters, None)
+
+    original_image_label.config(image=original_tk)
+    original_image_label.image = original_tk
+    new_image_label.config(image=new_tk)
+    new_image_label.image = new_tk
+
+app = tk.Tk()
+app.title("K-Means Image Segmentation")
+app.geometry("800x600")
+
+button_frame = tk.Frame(app)
+button_frame.pack(anchor="nw", padx=10, pady=10)
+
+load_button = tk.Button(button_frame, text="Load Image", command=load_image)
+load_button.pack(side=tk.LEFT, padx=5)
+
+entry_frame = tk.Frame(button_frame)
+entry_frame.pack(side=tk.LEFT, padx=10)
+
+num_clusters_label = tk.Label(entry_frame, text="Clusters:")
+num_clusters_label.pack(side=tk.TOP)
+
+num_clusters_var = tk.StringVar(value="5")
+num_clusters_entry = tk.Entry(entry_frame, textvariable=num_clusters_var, width=8)
+num_clusters_entry.pack(side=tk.LEFT, padx=5)
+
+apply_button = tk.Button(button_frame, text="Apply K-Means", command=apply_k_means)
+apply_button.pack(side=tk.LEFT, padx=5)
+
+image_frame = tk.Frame(app)
+image_frame.pack(anchor="nw", padx=10, pady=10)
+
+original_image_label = tk.Label(image_frame)
+original_image_label.pack(side=tk.LEFT)
+
+new_image_label = tk.Label(image_frame)
+new_image_label.pack(side=tk.LEFT)
+
+original_image = None
+new_image = None
+new_images = {}
+
+app.mainloop()
