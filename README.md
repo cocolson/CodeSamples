@@ -1,8 +1,3 @@
-<h1 align="center">Welcome to my GitHub profile! 👋🤖</h1>
-<p>
-    My name is Coby!<br>
-    I want to improve lives by making data-driven decisions that make the tools we use more human-friendly.<br>
-</p>
 <p>
     I recently graduated from the <a href="https://www.digipen.edu/">DigiPen Institute of Technology</a> in Redmond, WA with a BS in Computer Science and Game Design and I am looking for work opportunities on the engineering side of UI/UX, data analysis, or digital audio.
     I've included some code samples in C, C++, and Python in my profile repo, but you can visit my <a href="http://cobycolson.com">website</a> to see more.
